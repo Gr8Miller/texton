@@ -17,7 +17,67 @@ export class XSelection {
     this.xDocument = xDocument;
   }
 
-  public getTextNodes(): Text[] {
+  public static fromSelection(selection: Selection, xDoc: XDocument): XSelection | null {
+    if (selection.rangeCount > 0 && !selection.isCollapsed) {
+      const range = selection.getRangeAt(0);
+      return new XSelection(range, xDoc);
+    }
+    return null;
+  }
+
+  public static fromText(text: string, nth: number = 1, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
+    let range: Range | null = XSelection.rangeFrom(text, nth, xDoc);
+    if (range) {
+      if (optSelect) {
+        const selection: Selection | null = xDoc.win.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+      return new XSelection(range, xDoc);
+    }
+    return null;
+  }
+
+  /**
+   *  return an empty range object that has both of its boundary points positioned at
+   *  the beginning of the document when no parameters are given, else return an range
+   *  object that contains the nth occurrence of the specified text
+   *
+   * @param {string} text the base text
+   * @param {number} nth = 1 the nth index
+   * @param {XDocument} xDoc
+   * @return {Range} the range created that contains the specified text
+   * @private
+   */
+  private static rangeFrom(text: string, nth: number = 1, xDoc: XDocument): Range | null {
+
+    const nodes: XText[] = xDoc.nodes;
+    const cText: string = StringUtils.compact(text);
+    const index: number = StringUtils.indexOf(xDoc.text, cText, nth || 1);
+    if (index > -1) {
+      const sPos: number = index + nodes[0].startPosition; // include the first character
+      const ePos: number = sPos + cText.length; // exclude the last character
+
+      const sIndex = nodes.findIndex((node: XText) => node.endPosition >= sPos);
+      const eIndex = nodes.findIndex((node: XText) => node.startPosition >= ePos) - 1;
+      const sContainer = nodes[sIndex];
+      const eContainer = eIndex >= 0 ? nodes[eIndex] : nodes[nodes.length - 1];
+      if (sContainer) {
+        const sOffset = StringUtils.indexOfNthNotEmptyChar(sContainer.data, sPos - sContainer.startPosition);
+        const eOffset = StringUtils.indexOfNthNotEmptyChar(eContainer.data, ePos - eContainer.startPosition - 1);
+
+        const range: Range = xDoc.doc.createRange();
+        range.setStart(sContainer, sOffset);
+        range.setEnd(eContainer, eOffset + 1);
+        return range;
+      }
+    }
+    return null;
+  }
+
+  public get texts(): Text[] {
     if (this.xTexts) {
       return this.xTexts;
     }
@@ -33,7 +93,7 @@ export class XSelection {
       eContainer = NodeUtils.getValidTextNode(eContainer)!;
     }
 
-    const bTexts = this.xDocument.getNodes() as Array<XText>;
+    const bTexts = this.xDocument.nodes as Array<XText>;
     const si = bTexts.indexOf(sContainer);
     const srp = NodeUtils.split(sContainer, sOffset);
     if (srp.length > 0) {
@@ -68,7 +128,7 @@ export class XSelection {
     const cHead: string = StringUtils.compact(eContainer.substringData(0, offset));
     const cLength: number = cHead ? cHead.length : 0;
 
-    const content: string = this.xDocument.getText().substr(0, eContainer.startPosition + cLength);
+    const content: string = this.xDocument.text.substr(0, eContainer.startPosition + cLength);
     const occurrences: IOccurrence[] = StringUtils.find(content, cText);
     if (occurrences && occurrences.length > 0) {
       return occurrences[occurrences.length - 1];
@@ -76,11 +136,14 @@ export class XSelection {
     return None;
   }
 
-  public getContent(): string {
+  public getContent(compact: boolean = false): string {
+    if (compact) {
+      return StringUtils.compact(this.range.toString());
+    }
     return this.range.toString();
   }
 
-  public getSelection(): Selection {
+  public get selection(): Selection {
     const selection: Selection = this.xDocument.win.getSelection()!;
     if (selection.rangeCount < 1) {
       selection.addRange(this.range);
@@ -97,7 +160,7 @@ export class XSelection {
   }
 
   public isEmpty(): boolean {
-    const selection: Selection = this.getSelection();
+    const selection: Selection = this.selection;
     return selection.rangeCount < 1 || selection.isCollapsed || this.range.collapsed;
   }
 
@@ -115,7 +178,7 @@ export class XSelection {
       last.parentNode.normalize();
     }
 
-    const bTexts: XText[] = this.xDocument.getNodes() as XText[];
+    const bTexts: XText[] = this.xDocument.nodes as XText[];
     const fi = bTexts.indexOf(first);
     const li = bTexts.indexOf(last);
 

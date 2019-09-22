@@ -3,7 +3,7 @@ import {StringUtils} from './StringUtils';
 
 export class NodeUtils {
 
-  public static readonly elesToSkip = {
+  private static readonly elementsToSkip = {
     elements: [
       'applet',
       'area',
@@ -47,7 +47,7 @@ export class NodeUtils {
   public static getValidTextNode(node: Node): XText | null {
     if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
       return node as XText;
-    } else if (node.nodeType === 1 && !NodeUtils.isSkipable(node as Element)) {
+    } else if (node.nodeType === 1 && !NodeUtils.isSkippable(node as Element)) {
       for (let i = 0, len = node.childNodes.length; i < len; ++i) {
         const valid = NodeUtils.getValidTextNode(node.childNodes[i]);
         if (valid) {
@@ -61,7 +61,7 @@ export class NodeUtils {
   public static getValidTextNodes(node: Node): XText[] {
     if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
       return [node as XText];
-    } else if (node.nodeType === 1 && !NodeUtils.isSkipable(node as Element)) {
+    } else if (node.nodeType === 1 && !NodeUtils.isSkippable(node as Element)) {
       return Array.from(node.childNodes).reduce((nodes: XText[], child: Node) => {
         return nodes.concat(NodeUtils.getValidTextNodes(child));
       }, []);
@@ -69,8 +69,8 @@ export class NodeUtils {
     return [];
   }
 
-  public static isSkipable(node: Element): boolean {
-    return NodeUtils.elesToSkip.test(node, null);
+  private static isSkippable(node: Element): boolean {
+    return NodeUtils.elementsToSkip.test(node, null);
   }
 
   public static split(text: XText, offset: number): XText {
@@ -80,5 +80,4 @@ export class NodeUtils {
     text.endPosition = rp.startPosition - 1;
     return rp;
   }
-
 }

@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Title</title>
   <script type="text/javascript" src="../dist/texton.umd.js"></script>
-  <script type="application/javascript" src="../node_modules/jquery/dist/jquery.min.js"></script>
   <style type="text/css">
-    .markup {
+    em.markup {
       background-color: yellowgreen;
+      font-style: normal;
     }
   </style>
 </head>
@@ -21,27 +21,26 @@ haha
   <p> this is a test </p>
   this is a test
 </div>
-<div id="console">
-
-</div>
 <script type="application/javascript">
-  const {StringUtils, XDocument} = texton;
+  const {XDocument, XSelection} = texton;
   const doc = XDocument.from(document.querySelector('#body'));
-  console.log(doc.getNodes());
-  doc.root.addEventListener('x-selection', (event) => {
-    const selection = event.detail.selection;
-    console.log("=========================");
-    console.log(selection.getTextNodes());
-    console.log(selection.getContent());
-    console.log(StringUtils.compact(selection.getContent()));
-    console.log(selection.getOccurrence());
-    selection.getTextNodes().forEach((text) => {
-      const $mark = document.createElement('em');
-      $mark.classList.add('markup');
-      text.replaceWith($mark);
-      $mark.appendChild(text);
-    });
-    console.log("=========================");
+  console.log(doc.nodes);
+  doc.root.addEventListener('mouseup', () => {
+    let sel = window.getSelection();
+    const selection = doc.fromSelection(sel);
+    if (selection && selection.getOccurrence().nth >= 0) {
+      console.log("=========================");
+      console.log(selection.texts);
+      console.log(selection.getContent());
+      console.log(selection.getOccurrence());
+      selection.texts.forEach((text) => {
+        const $mark = document.createElement('em');
+        $mark.classList.add('markup');
+        text.replaceWith($mark);
+        $mark.appendChild(text);
+      });
+      console.log("=========================");
+    }
   });
 </script>
 </body>

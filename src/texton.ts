@@ -1,3 +1,3 @@
 export {XText, XSelection} from './XSelection';
-export {IOccurrence, StringUtils} from './StringUtils';
+export {IOccurrence} from './StringUtils';
 export {XDocument} from './XDocument';
