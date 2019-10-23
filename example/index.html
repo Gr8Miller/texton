@@ -24,11 +24,10 @@ haha
 <script type="application/javascript">
   const {XDocument, XSelection} = texton;
   const doc = XDocument.from(document.querySelector('#body'));
-  console.log(doc.nodes);
-  doc.root.addEventListener('mouseup', () => {
-    let sel = window.getSelection();
-    const selection = doc.fromSelection(sel);
+
+  function renderSelection(selection) {
     if (selection && selection.getOccurrence().nth >= 0) {
+      console.log(selection.getTextRange(5));
       console.log("=========================");
       console.log(selection.texts);
       console.log(selection.getContent());
@@ -41,6 +40,19 @@ haha
       });
       console.log("=========================");
     }
+  }
+
+  console.log(doc.nodes);
+  const range = {
+    from: {text: "hisis", nth: 2},
+    to: {text: "estth", nth: 2}
+  };
+  const selection1 = XSelection.fromTextRange(range, false, doc);
+  renderSelection(selection1);
+  doc.root.addEventListener('mouseup', () => {
+    let sel = window.getSelection();
+    const selection = doc.fromSelection(sel);
+    renderSelection(selection);
   });
 </script>
 </body>

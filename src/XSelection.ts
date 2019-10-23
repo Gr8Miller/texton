@@ -1,6 +1,7 @@
-import {IOccurrence, None, StringUtils} from './StringUtils';
+import {StringUtils} from './StringUtils';
 import {XDocument} from './XDocument';
 import {NodeUtils} from './NodeUtils';
+import {IOccurrence, ITextRange} from './texton';
 
 export interface XText extends Text {
   startPosition: number;
@@ -18,15 +19,21 @@ export class XSelection {
   }
 
   public static fromSelection(selection: Selection, xDoc: XDocument): XSelection | null {
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
-      const range = selection.getRangeAt(0);
-      return new XSelection(range, xDoc);
-    }
-    return null;
+    const range: Range | null = XSelection.rangeFromSelection(selection, xDoc);
+    return XSelection.fromRange(range, false, xDoc);
+  }
+
+  public static fromTextRange(textRange: ITextRange, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
+    const range: Range | null = XSelection.rangeFromTextRange(textRange, xDoc);
+    return XSelection.fromRange(range, optSelect, xDoc);
   }
 
   public static fromText(text: string, nth: number = 1, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
-    let range: Range | null = XSelection.rangeFrom(text, nth, xDoc);
+    const range: Range | null = XSelection.rangeFromText(text, nth, xDoc);
+    return XSelection.fromRange(range, optSelect, xDoc);
+  }
+
+  public static fromRange(range: Range | null, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     if (range) {
       if (optSelect) {
         const selection: Selection | null = xDoc.win.getSelection();
@@ -36,6 +43,25 @@ export class XSelection {
         }
       }
       return new XSelection(range, xDoc);
+    }
+    return null;
+  }
+
+  private static rangeFromSelection(selection: Selection, xDoc: XDocument): Range | null {
+    if (selection.rangeCount > 0 && !selection.isCollapsed) {
+      return selection.getRangeAt(0);
+    }
+    return null;
+  }
+
+  private static rangeFromTextRange(textRange: ITextRange, xDoc: XDocument): Range | null {
+    const from = XSelection.rangeFromText(textRange.from.text, textRange.from.nth, xDoc);
+    const to = XSelection.rangeFromText(textRange.to.text, textRange.to.nth, xDoc);
+    if (from && to) {
+      const range: Range = xDoc.doc.createRange();
+      range.setStart(from.startContainer, from.startOffset);
+      range.setEnd(to.endContainer, to.endOffset);
+      return range;
     }
     return null;
   }
@@ -51,8 +77,7 @@ export class XSelection {
    * @return {Range} the range created that contains the specified text
    * @private
    */
-  private static rangeFrom(text: string, nth: number = 1, xDoc: XDocument): Range | null {
-
+  private static rangeFromText(text: string, nth: number = 1, xDoc: XDocument): Range | null {
     const nodes: XText[] = xDoc.nodes;
     const cText: string = StringUtils.compact(text);
     const index: number = StringUtils.indexOf(xDoc.text, cText, nth || 1);
@@ -117,7 +142,7 @@ export class XSelection {
   public getOccurrence(): IOccurrence {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
-      return None;
+      return IOccurrence.None;
     }
 
     let eContainer: XText = this.range.endContainer as XText;
@@ -133,7 +158,48 @@ export class XSelection {
     if (occurrences && occurrences.length > 0) {
       return occurrences[occurrences.length - 1];
     }
-    return None;
+    return IOccurrence.None;
+  }
+
+  public getTextRange(len: number = 5): ITextRange {
+    const cText: string = StringUtils.compact(this.range.toString());
+    if (cText.length < 1) {
+      return ITextRange.None;
+    }
+    const eText = cText.length > 5 ? cText.substr(cText.length - 5, 5) : cText;
+    const sText = cText.length > 5 ? cText.substr(0, 5) : cText;
+
+    let eContainer: XText = this.range.endContainer as XText;
+    if (eContainer.nodeType !== 3) {
+      eContainer = NodeUtils.getValidTextNode(eContainer)!;
+    }
+
+    const eOffset: number = this.range.endOffset;
+    const eHead: string = StringUtils.compact(eContainer.substringData(0, eOffset));
+    const eLength: number = eHead ? eHead.length : 0;
+
+    const eContent: string = this.xDocument.text.substr(0, eContainer.startPosition + eLength);
+    const eOccurs: IOccurrence[] = StringUtils.find(eContent, eText);
+
+    let sContainer: XText = this.range.startContainer as XText;
+    if (sContainer.nodeType !== 3) {
+      sContainer = NodeUtils.getValidTextNode(sContainer)!;
+    }
+
+    const sOffset: number = this.range.startOffset;
+    const sHead: string = StringUtils.compact(sContainer.substringData(0, sOffset));
+    const sLength: number = sHead ? sHead.length : 0;
+
+    const sContent: string = this.xDocument.text.substr(0, sContainer.startPosition + sLength + sText.length);
+    const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
+
+    if (sOccurs && sOccurs.length > 0 && eOccurs && eOccurs.length > 0) {
+      return {
+        from: {text: sText, nth: sOccurs[sOccurs.length - 1].nth},
+        to: {text: eText, nth: eOccurs[eOccurs.length - 1].nth}
+      }
+    }
+    return ITextRange.None;
   }
 
   public getContent(compact: boolean = false): string {

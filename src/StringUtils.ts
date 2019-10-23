@@ -1,3 +1,5 @@
+import {IOccurrence} from './texton';
+
 export class StringUtils {
 
   /**
@@ -67,13 +69,3 @@ export class StringUtils {
     return source.replace(/(^\s*)|(\s*$)/g, '');
   }
 }
-
-export interface IOccurrence {
-  nth: number;
-  position: number;
-}
-
-export const None: IOccurrence = {
-  nth: -1,
-  position: -1,
-};

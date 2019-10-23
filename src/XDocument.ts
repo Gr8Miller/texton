@@ -1,6 +1,7 @@
 import {XSelection, XText} from './XSelection';
 import {StringUtils} from './StringUtils';
 import {NodeUtils} from './NodeUtils';
+import {ITextRange} from './texton';
 
 export class XDocument {
   public static from(root: Element = document.body): XDocument {
@@ -51,6 +52,10 @@ export class XDocument {
 
   public fromText(text: string, nth: number = 1, optSelect: boolean = false): XSelection | null {
     return this.selection = XSelection.fromText(text, nth, optSelect, this);
+  }
+
+  public fromTextRange(range: ITextRange, optSelect: boolean = false): XSelection | null {
+    return this.selection = XSelection.fromTextRange(range, optSelect, this);
   }
 
   private prepare(root: Element): { text: string; nodes: XText[] } {
