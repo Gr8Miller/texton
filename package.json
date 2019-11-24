@@ -1,8 +1,8 @@
 {
   "name": "texton",
-  "version": "0.0.0",
-  "description": "",
-  "keywords": [],
+  "version": "1.0",
+  "description": "a lib enable to serialize/store/restore user selection on web pages extremely easy",
+  "keywords": ["bookmark", "highlight", "webpage", "texton"],
   "main": "dist/texton.umd.js",
   "module": "dist/texton.es5.js",
   "typings": "dist/types/texton.d.ts",
@@ -11,7 +11,7 @@
   ],
   "author": "Gr8Miller <gr8miller@hotmail.com>",
   "repository": {
-    "type": "github",
+    "type": "git",
     "url": "https://github.com/Gr8Miller/texton"
   },
   "license": "MIT",
