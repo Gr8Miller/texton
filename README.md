@@ -12,12 +12,20 @@ tools like
 [Anylink](https://chrome.google.com/webstore/detail/any-link-safereliable-lin/mpflpgaobfpjcpefkdnpalfdodifkkgc), 
 [Diigo](https://chrome.google.com/webstore/detail/diigo-web-collector-captu/pnhplgjpclknigjpccbcnmicgcieojbh),
 [Web Highlighter](https://alienzhou.github.io/web-highlighter/)
+## Setup
+
+```bash
+cd texton
+npm run build
+```
+then open `example/article.html`, you'll see some highlights
+
 ## Usage
 
 ```bash
-npm install texton -S
+npm install texton -S #or
+npm install path/to/texton -S
 ```
-
 **Start coding!**
 
 ### Concepts

@@ -9,10 +9,10 @@
   "files": [
     "dist"
   ],
-  "author": "Mingliang Wang <wang_m@worksap.co.jp>",
+  "author": "Gr8Miller <gr8miller@hotmail.com>",
   "repository": {
-    "type": "git",
-    "url": ""
+    "type": "github",
+    "url": "https://github.com/Gr8Miller/texton"
   },
   "license": "MIT",
   "engines": {
@@ -39,11 +39,6 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "node_modules/cz-conventional-changelog"
-    }
   },
   "jest": {
     "transform": {
@@ -75,11 +70,6 @@
   "prettier": {
     "semi": false,
     "singleQuote": true
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
   },
   "devDependencies": {
     "@commitlint/cli": "^7.1.2",
