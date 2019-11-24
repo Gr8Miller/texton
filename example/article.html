@@ -60,9 +60,9 @@
 
   const doc = XDocument.from(document.body);
 
-  // const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};
-  // const range1 = doc.fromTextRange(textRange1);
-  // renderSelection(range1);
+  const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};
+  const range1 = doc.fromTextRange(textRange1);
+  renderSelection(range1);
   // const textRange2 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 2}};
   // const range2 = doc.fromTextRange(textRange2);
   // renderSelection(range2);
@@ -76,13 +76,13 @@
   //   console.log(selection.getTextRange(5));
   // });
 
-  doc.root.addEventListener('mouseup', () => {
-    const selection = doc.fromSelection(window.getSelection());
-    console.log({
-      text: selection.getContent(true),
-      nth: selection.getOccurrence().nth,
-    });
-  });
+  // doc.root.addEventListener('mouseup', () => {
+  //   const selection = doc.fromSelection(window.getSelection());
+  //   console.log({
+  //     text: selection.getContent(true),
+  //     nth: selection.getOccurrence().nth,
+  //   });
+  // });
 </script>
 </body>
 </html>

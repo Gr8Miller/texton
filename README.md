@@ -38,53 +38,25 @@ const doc = XDocument.from(document.querySelector('#content'));
 
 #### AMD
 ```xhtml
-<html>
-  <head>
-      <script type="text/javascript" src="path/to/texton.umd.js"></script>
-  </head>
-  <body>
-    <!-- ... -->
-    <div id="content">
-    <!-- ... -->
-    </div>
-    <!-- ... -->
-    <script>
-      const {XDocument, XSelection} = texton;
-      const doc = XDocument.from(document.querySelector('#content'));
-      function serialize(){
-        let selection = window.getSelection();
-        const xSelection = doc.fromSelection(selection);
-        const serialized = xSelection.getTextRange();
-          
-        // store(serialized);      
-      } 
-      
-      function restore(serialized){
-        // const stored = StorageService.get();
-        const xSelection = XSelection.fromTextRange(serialized, true, doc);
-        const selection = window.getSelection(); // native selection
-      }   
-
-      function highlight(serialized){
-        const xSelection = XSelection.fromTextRange(serialized, true, doc);
-        const textNodes = xSelection.texts;
-        textNodes.forEach((text) => {
-          const $mark = document.createElement('em');
-          $mark.classList.add('markup');
-          text.replaceWith($mark);
-          $mark.appendChild(text);
-        });
-      }   
-    </script>
-  </body>
-</html>
+<script type="text/javascript" src="path/to/texton.umd.js"></script>
 ```
+```javascript
+const {XDocument, XSelection} = texton;
+const doc = XDocument.from(document.querySelector('#content'));
+```
+
 ## Features 
 refer `example/article.html`
 ```xhtml
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN" lang="zh-CN">
 <head>
   <title>寻路的人 周作人</title>
+  <style type="text/css">
+    em.markup {
+      background-color: yellowgreen;
+      font-style: normal;
+    }
+  </style>
 </head>
 <body>
 <div id="article_show">
@@ -130,13 +102,35 @@ refer `example/article.html`
       });
     }
   }
+
+  const {XDocument, XSelection} = texton;
+
+  const doc = XDocument.from(document.body);
+
+  const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};
+  const range1 = doc.fromTextRange(textRange1);
+  renderSelection(range1);
+  // const textRange2 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 2}};
+  // const range2 = doc.fromTextRange(textRange2);
+  // renderSelection(range2);
+  // const text1 = doc.fromText('太残酷了', 1);
+  // renderSelection(text1);
+  // const text2 = doc.fromText('太残酷了', 2);
+  // renderSelection(text2);
+
+  // doc.root.addEventListener('mouseup', () => {
+  //   const selection = doc.fromSelection(window.getSelection());
+  //   console.log(selection.getTextRange(5));
+  // });
+
+  // doc.root.addEventListener('mouseup', () => {
+  //   const selection = doc.fromSelection(window.getSelection());
+  //   console.log({
+  //     text: selection.getContent(true),
+  //     nth: selection.getOccurrence().nth,
+  //   });
+  // });
 </script>
-<style type="text/css">
-  em.markup {
-    background-color: yellowgreen;
-    font-style: normal;
-  }
-</style>
 </body>
 </html>
 ```
