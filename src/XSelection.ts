@@ -18,21 +18,52 @@ export class XSelection {
     this.xDocument = xDocument;
   }
 
+  /**
+   * create {@link XSelection} from native {@link Selection}
+   * @param selection the native `Selection` from which to create the `XSelection` instance.
+   * @param xDoc the context of the to be created `XSelection` instance.
+   */
   public static fromSelection(selection: Selection, xDoc: XDocument): XSelection | null {
     const range: Range | null = XSelection.rangeFromSelection(selection, xDoc);
     return XSelection.fromRange(range, false, xDoc);
   }
 
+  /**
+   * create {@link XSelection} from {@link ITextRange} pojo;
+   * {@link ITextRange} specifies the start point and end point
+   * <pre>
+   * export interface ITextRange {
+   *   from: { text: string, nth: number }, // means starting from the `nth` `text`
+   *   to: { text: string, nth: number }, // means ending at the `nth` `text`
+   * }
+   * </pre>
+   * @param textRange the serialized pojo from which to create the `XSelection` instance.
+   * @param optSelect true to create explicit selection(be selected visibly from browser), false otherwise
+   * @param xDoc the context of the to be created `XSelection` instance.
+   */
   public static fromTextRange(textRange: ITextRange, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     const range: Range | null = XSelection.rangeFromTextRange(textRange, xDoc);
     return XSelection.fromRange(range, optSelect, xDoc);
   }
 
+  /**
+   * create {@link XSelection} from {@link ITextRange} pojo
+   * @param text the text content to be selected.
+   * @param nth together with {@param text} specifies the exact {@code nth} {@code text} will be used to create the selection.
+   * @param optSelect true to create explicit selection(be selected visibly from browser), false otherwise
+   * @param xDoc the context of the to be created `XSelection` instance.
+   */
   public static fromText(text: string, nth: number = 1, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     const range: Range | null = XSelection.rangeFromText(text, nth, xDoc);
     return XSelection.fromRange(range, optSelect, xDoc);
   }
 
+  /**
+   * create {@link XSelection} from native {@link Range}
+   * @param range the text content to be selected.
+   * @param optSelect true to create selection explicitly(be selected visibly from browser), false otherwise
+   * @param xDoc the context of the to be created `XSelection` instance.
+   */
   public static fromRange(range: Range | null, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     if (range) {
       if (optSelect) {
@@ -102,6 +133,13 @@ export class XSelection {
     return null;
   }
 
+  /**
+   * the text nodes contained in the selection.
+   * <em>
+   * text node will be splatted into 2 parts if the selection is start from/end in a internal
+   * position of a text node
+   * </em>
+   */
   public get texts(): Text[] {
     if (this.xTexts) {
       return this.xTexts;
@@ -139,6 +177,15 @@ export class XSelection {
     return this.xTexts;
   }
 
+  /**
+   * get the exact "occurrence" of this selection.
+   * <em>
+   *   the selected text content may appear >=1 times in this page, and the selection is it's
+   *   {@code occurrence.nth} time. and the start char of this selection is the
+   *   {@code occurrence.position}th char of the whole text content in this page.
+   * </em>
+   *
+   */
   public getOccurrence(): IOccurrence {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
@@ -161,6 +208,31 @@ export class XSelection {
     return IOccurrence.None;
   }
 
+  /**
+   * get the text range of the selection in this page.
+   * <pre>
+   * export interface ITextRange {
+   *   from: { text: string, nth: number }, // means starting from the `nth` `text`
+   *   to: { text: string, nth: number }, // means ending at the `nth` `text`
+   * }
+   * </pre>
+   * that is, the text content of this selection starts with {@code textRange.from.text} and
+   * ends with {@code textRange.to.text}. and {@code textRange.from.text} is its {@code textRange.from.nth}
+   * occurrence, {@code textRange.to.text} is its {@code textRange.to.nth} occurrence.
+   * e.g.
+   * for text
+   * <span>hello world, hello miller, hello world, hello miller, hello miller</span>
+   * <pre>
+   * {
+   *   from:{text: 'hello', nth: 2}
+   *   to:{text: 'miller', nth: 3}
+   * }
+   * means, the selection starts from the 2nd `hello` and ends with 3rd `miller`. that is:
+   * <span>hello world, <selected>hello miller, hello world, hello miller, hello miller<selected>, hello world<span>
+   * </pre>
+   *
+   * @param len
+   */
   public getTextRange(len: number = 5): ITextRange {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
@@ -202,6 +274,10 @@ export class XSelection {
     return ITextRange.None;
   }
 
+  /**
+   * get the selected text content
+   * @param compact true to remove the white spaces. false otherwise
+   */
   public getContent(compact: boolean = false): string {
     if (compact) {
       return StringUtils.compact(this.range.toString());
@@ -209,6 +285,9 @@ export class XSelection {
     return this.range.toString();
   }
 
+  /**
+   * get the native selection
+   */
   public get selection(): Selection {
     const selection: Selection = this.xDocument.win.getSelection()!;
     if (selection.rangeCount < 1) {
@@ -217,6 +296,9 @@ export class XSelection {
     return selection;
   }
 
+  /**
+   * clear the selection
+   */
   public empty(): void {
     this.range.collapse();
     const selection: Selection = this.xDocument.win.getSelection()!;
@@ -225,6 +307,9 @@ export class XSelection {
     selection.removeAllRanges && selection.removeAllRanges();
   }
 
+  /**
+   * check if the selection is cleared or not.
+   */
   public isEmpty(): boolean {
     const selection: Selection = this.selection;
     return selection.rangeCount < 1 || selection.isCollapsed || this.range.collapsed;

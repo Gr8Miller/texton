@@ -25,10 +25,7 @@ export class XDocument {
   }
 
   /**
-   * @param {string=} optText
-   * @param {number=1} optNth
-   * @param {boolean=false} optSelect = false whether to select the range
-   * @return {XSelection}
+   * @see {@code XSelection.fromText}
    */
   public select(optText?: string, optNth: number = 1, optSelect: boolean = false): XSelection | null {
     if (optText && optText!.trim()) {
@@ -46,14 +43,23 @@ export class XDocument {
     return this.selection;
   }
 
+  /**
+   * @see {@code XSelection.fromSelection}
+   */
   public fromSelection(selection: Selection): XSelection | null {
     return this.selection = XSelection.fromSelection(selection, this);
   }
 
+  /**
+   * @see {@code XSelection.fromText}
+   */
   public fromText(text: string, nth: number = 1, optSelect: boolean = false): XSelection | null {
     return this.selection = XSelection.fromText(text, nth, optSelect, this);
   }
 
+  /**
+   * @see {@code XSelection.fromTextRange}
+   */
   public fromTextRange(range: ITextRange, optSelect: boolean = false): XSelection | null {
     return this.selection = XSelection.fromTextRange(range, optSelect, this);
   }
