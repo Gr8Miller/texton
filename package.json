@@ -1,6 +1,6 @@
 {
   "name": "texton",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a lib enable to serialize/store/restore user selection on web pages extremely easy",
   "keywords": ["bookmark", "highlight", "webpage", "texton", "selection", "range"],
   "main": "dist/texton.umd.js",
