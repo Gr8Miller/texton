@@ -10,12 +10,12 @@ export interface XText extends Text {
 
 export class XSelection {
   public readonly range: Range;
-  private readonly xDocument: XDocument;
-  private xTexts: XText[] | undefined;
+  private readonly xdoc: XDocument;
+  private texts: Text[] | undefined;
 
   constructor(range: Range, xDocument: XDocument) {
     this.range = range;
-    this.xDocument = xDocument;
+    this.xdoc = xDocument;
   }
 
   /**
@@ -42,6 +42,7 @@ export class XSelection {
    * @param xDoc the context of the to be created `XSelection` instance.
    */
   public static fromTextRange(textRange: ITextRange, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
+    xDoc.refresh();
     const range: Range | null = XSelection.rangeFromTextRange(textRange, xDoc);
     return XSelection.fromRange(range, optSelect, xDoc);
   }
@@ -54,6 +55,7 @@ export class XSelection {
    * @param xDoc the context of the to be created `XSelection` instance.
    */
   public static fromText(text: string, nth: number = 1, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
+    xDoc.refresh();
     const range: Range | null = XSelection.rangeFromText(text, nth, xDoc);
     return XSelection.fromRange(range, optSelect, xDoc);
   }
@@ -86,12 +88,12 @@ export class XSelection {
   }
 
   private static rangeFromTextRange(textRange: ITextRange, xDoc: XDocument): Range | null {
-    const from = XSelection.rangeFromText(textRange.from.text, textRange.from.nth, xDoc);
-    const to = XSelection.rangeFromText(textRange.to.text, textRange.to.nth, xDoc);
-    if (from && to) {
+    const head = XSelection.rangeFromText(textRange.from.text, textRange.from.nth, xDoc);
+    const tail = XSelection.rangeFromText(textRange.to.text, textRange.to.nth, xDoc);
+    if (head && tail) {
       const range: Range = xDoc.doc.createRange();
-      range.setStart(from.startContainer, from.startOffset);
-      range.setEnd(to.endContainer, to.endOffset);
+      range.setStart(head.endContainer, head.endOffset);
+      range.setEnd(tail.endContainer, tail.endOffset);
       return range;
     }
     return null;
@@ -140,13 +142,13 @@ export class XSelection {
    * position of a text node
    * </em>
    */
-  public get texts(): Text[] {
-    if (this.xTexts) {
-      return this.xTexts;
+  public getTextNodes(): Text[] {
+    if (this.texts) {
+      return this.texts;
     }
 
-    let sContainer: XText = this.range.startContainer as XText;
-    let eContainer: XText = this.range.endContainer as XText;
+    let sContainer: Text = this.range.startContainer as Text;
+    let eContainer: Text = this.range.endContainer as Text;
     let sOffset = this.range.startOffset;
     let eOffset = this.range.endOffset;
     if (sContainer.nodeType !== 3) {
@@ -156,25 +158,25 @@ export class XSelection {
       eContainer = NodeUtils.getValidTextNode(eContainer)!;
     }
 
-    const bTexts = this.xDocument.nodes as Array<XText>;
-    const si = bTexts.indexOf(sContainer);
-    const srp = NodeUtils.split(sContainer, sOffset);
-    if (srp.length > 0) {
-      bTexts.splice(si + 1, 0, srp);
+    if (sOffset !== 0) {
+      const srp = sContainer.splitText(sOffset);
+      if (eContainer === sContainer) {
+        eContainer = srp;
+        eOffset = eOffset - sOffset;
+      }
+      sContainer = srp;
+      sOffset = 0;
     }
-    if (eContainer === sContainer) {
-      eContainer = srp;
-      eOffset = eOffset - sOffset;
+
+    if (eContainer.data.length !== eOffset) {
+      eContainer.splitText(eOffset);
     }
-    const ei = bTexts.indexOf(eContainer);
-    const erp = NodeUtils.split(eContainer, eOffset);
-    if (erp.length > 0) {
-      bTexts.splice(ei + 1, 0, erp);
-    }
-    this.xTexts = bTexts.slice(si + 1, ei + 1);
-    this.range.setStart(bTexts[si + 1], 0);
-    this.range.setEnd(bTexts[ei], bTexts[ei].data.length);
-    return this.xTexts;
+
+    const root = this.range.commonAncestorContainer;
+    this.texts = NodeUtils.getTextNodesBetween(root, sContainer, eContainer);
+    this.range.setStart(sContainer, sOffset);
+    this.range.setEnd(eContainer, eOffset);
+    return this.texts;
   }
 
   /**
@@ -192,15 +194,10 @@ export class XSelection {
       return IOccurrence.None;
     }
 
-    let eContainer: XText = this.range.endContainer as XText;
-    if (eContainer.nodeType !== 3) {
-      eContainer = NodeUtils.getValidTextNode(eContainer)!;
-    }
-    const offset: number = this.range.endOffset;
-    const cHead: string = StringUtils.compact(eContainer.substringData(0, offset));
-    const cLength: number = cHead ? cHead.length : 0;
-
-    const content: string = this.xDocument.text.substr(0, eContainer.startPosition + cLength);
+    const temp: Range = this.xdoc.doc.createRange();
+    temp.setStart(this.xdoc.root, 0);
+    temp.setEnd(this.range.endContainer, this.range.endOffset);
+    const content: string = StringUtils.compact(temp.toString());
     const occurrences: IOccurrence[] = StringUtils.find(content, cText);
     if (occurrences && occurrences.length > 0) {
       return occurrences[occurrences.length - 1];
@@ -238,32 +235,31 @@ export class XSelection {
     if (cText.length < 1) {
       return ITextRange.None;
     }
-    const eText = cText.length > 5 ? cText.substr(cText.length - 5, 5) : cText;
-    const sText = cText.length > 5 ? cText.substr(0, 5) : cText;
 
-    let eContainer: XText = this.range.endContainer as XText;
-    if (eContainer.nodeType !== 3) {
-      eContainer = NodeUtils.getValidTextNode(eContainer)!;
-    }
+    const temp: Range = this.xdoc.doc.createRange();
+    temp.setStart(this.xdoc.root, 0);
 
-    const eOffset: number = this.range.endOffset;
-    const eHead: string = StringUtils.compact(eContainer.substringData(0, eOffset));
-    const eLength: number = eHead ? eHead.length : 0;
-
-    const eContent: string = this.xDocument.text.substr(0, eContainer.startPosition + eLength);
+    temp.setEnd(this.range.endContainer, this.range.endOffset);
+    const eContent: string = StringUtils.compact(temp.toString());
+    const eText = eContent.length > 5 ? eContent.substr(eContent.length - 5, 5) : eContent;
     const eOccurs: IOccurrence[] = StringUtils.find(eContent, eText);
 
-    let sContainer: XText = this.range.startContainer as XText;
-    if (sContainer.nodeType !== 3) {
-      sContainer = NodeUtils.getValidTextNode(sContainer)!;
-    }
-
-    const sOffset: number = this.range.startOffset;
-    const sHead: string = StringUtils.compact(sContainer.substringData(0, sOffset));
-    const sLength: number = sHead ? sHead.length : 0;
-
-    const sContent: string = this.xDocument.text.substr(0, sContainer.startPosition + sLength + sText.length);
+    temp.setEnd(this.range.startContainer, this.range.startOffset);
+    const sContent: string = StringUtils.compact(temp.toString());
+    const sText = sContent.length > 5 ? sContent.substr(sContent.length - 5, 5) : sContent;
     const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
+
+    // const sContainer = this.range.startContainer as Text;
+    // if (sContainer.nodeType !== 3) {
+    //   sContainer = NodeUtils.getValidTextNode(sContainer)!;
+    // }
+    // const sText = cText.length > 5 ? cText.substr(0, 5) : cText;
+    // const cHead: string = StringUtils.compact(sContainer.substringData(0, this.range.startOffset));
+    // const cLength = cHead.length + sText.length;
+    // const sOffset = StringUtils.indexOfNthNotEmptyChar(this.range.toString(), cLength);
+    // temp.setEnd(sContainer, sOffset);
+    // const sContent: string = StringUtils.compact(temp.toString());
+    // const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
 
     if (sOccurs && sOccurs.length > 0 && eOccurs && eOccurs.length > 0) {
       return {
@@ -289,7 +285,7 @@ export class XSelection {
    * get the native selection
    */
   public get selection(): Selection {
-    const selection: Selection = this.xDocument.win.getSelection()!;
+    const selection: Selection = this.xdoc.win.getSelection()!;
     if (selection.rangeCount < 1) {
       selection.addRange(this.range);
     }
@@ -300,8 +296,21 @@ export class XSelection {
    * clear the selection
    */
   public empty(): void {
+    if (!this.texts || this.texts.length < 1) {
+      return;
+    }
+    const first: Text = this.range.startContainer as Text;
+    const last: Text = this.range.endContainer as Text;
+    if (first && first.parentNode) {
+      first.parentNode.normalize();
+    }
+    if (last && last.parentNode) {
+      last.parentNode.normalize();
+    }
+
     this.range.collapse();
-    const selection: Selection = this.xDocument.win.getSelection()!;
+    this.texts = [];
+    const selection: Selection = this.xdoc.win.getSelection()!;
     selection.collapseToStart();
     selection.empty && selection.empty();
     selection.removeAllRanges && selection.removeAllRanges();
@@ -313,33 +322,5 @@ export class XSelection {
   public isEmpty(): boolean {
     const selection: Selection = this.selection;
     return selection.rangeCount < 1 || selection.isCollapsed || this.range.collapsed;
-  }
-
-  public cancel(): void {
-    const texts = this.xTexts!;
-    if (!texts || texts.length < 1) {
-      return;
-    }
-    const first: XText = texts[0];
-    const last: XText = texts[texts.length - 1];
-    if (first && first.parentNode) {
-      first.parentNode.normalize();
-    }
-    if (last && last.parentNode) {
-      last.parentNode.normalize();
-    }
-
-    const bTexts: XText[] = this.xDocument.nodes as XText[];
-    const fi = bTexts.indexOf(first);
-    const li = bTexts.indexOf(last);
-
-    if (li < bTexts.length - 1 && last.nextSibling === bTexts[li + 1]) {
-      last.endPosition = bTexts[li + 1].endPosition;
-      bTexts.splice(li + 1, 1);
-    }
-    if (fi > 0 && first.previousSibling === bTexts[fi - 1]) {
-      bTexts[fi - 1].endPosition = first.endPosition;
-      bTexts.splice(fi, 1);
-    }
   }
 }

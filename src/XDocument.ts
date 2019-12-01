@@ -8,8 +8,8 @@ export class XDocument {
     return new XDocument(root);
   }
 
-  public readonly nodes: XText[];
-  public readonly text: string;
+  public nodes!: XText[];
+  public text!: string;
   public readonly doc: Document;
   public readonly win: Window;
   public readonly root: Element;
@@ -19,7 +19,20 @@ export class XDocument {
     this.root = root;
     this.doc = (root instanceof Document ? root : root.ownerDocument)!;
     this.win = this.doc.defaultView!;
-    const {text, nodes} = this.prepare(root);
+    this.refresh();
+  }
+
+  public refresh() {
+    const nodes: XText[] = NodeUtils.getValidTextNodes(this.root) as Array<XText>;
+    let position = 0;
+    let text: string = '';
+    nodes.forEach((node: XText) => {
+      node.startPosition = position;
+      const nodeText = StringUtils.compact(node.data);
+      text += nodeText;
+      position += nodeText.length;
+      node.endPosition = position - 1;
+    });
     this.text = text;
     this.nodes = nodes;
   }
@@ -30,8 +43,7 @@ export class XDocument {
   public select(optText?: string, optNth: number = 1, optSelect: boolean = false): XSelection | null {
     if (optText && optText!.trim()) {
       if (this.selection && !this.selection.isEmpty()) {
-        this.selection.cancel();
-        this.selection.selection.empty();
+        this.selection.empty();
       }
       this.selection = this.fromText(optText.trim(), optNth);
     } else {
@@ -62,20 +74,6 @@ export class XDocument {
    */
   public fromTextRange(range: ITextRange, optSelect: boolean = false): XSelection | null {
     return this.selection = XSelection.fromTextRange(range, optSelect, this);
-  }
-
-  private prepare(root: Element): { text: string; nodes: XText[] } {
-    const texts: XText[] = NodeUtils.getValidTextNodes(root);
-    let position = 0;
-    let xText: string = '';
-    texts.forEach((node: XText) => {
-      node.startPosition = position;
-      const cText = StringUtils.compact(node.data);
-      xText += cText;
-      position += cText.length;
-      node.endPosition = position - 1;
-    });
-    return {text: xText, nodes: texts};
   }
 
   public normalize(): void {

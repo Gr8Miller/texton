@@ -44,6 +44,13 @@ export class NodeUtils {
     },
   };
 
+  public static getTextNodesBetween(root: Node, startNode: Text, endNode: Text): Array<Text> {
+    const nodes = NodeUtils.getValidTextNodes(root);
+    const si = nodes.indexOf(startNode);
+    const ei = nodes.indexOf(endNode);
+    return nodes.slice(si, ei + 1);
+  }
+
   public static getValidTextNode(node: Node): XText | null {
     if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
       return node as XText;
@@ -58,11 +65,11 @@ export class NodeUtils {
     return NodeUtils.getValidTextNode(node.nextSibling!);
   }
 
-  public static getValidTextNodes(node: Node): XText[] {
+  public static getValidTextNodes(node: Node): Text[] {
     if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
-      return [node as XText];
+      return [node as Text];
     } else if (node.nodeType === 1 && !NodeUtils.isSkippable(node as Element)) {
-      return Array.from(node.childNodes).reduce((nodes: XText[], child: Node) => {
+      return Array.from(node.childNodes).reduce((nodes: Text[], child: Node) => {
         return nodes.concat(NodeUtils.getValidTextNodes(child));
       }, []);
     }
