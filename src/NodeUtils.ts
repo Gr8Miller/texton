@@ -44,40 +44,106 @@ export class NodeUtils {
     },
   };
 
-  public static getTextNodesBetween(root: Node, startNode: Text, endNode: Text): Array<Text> {
-    const nodes = NodeUtils.getValidTextNodes(root);
-    const si = nodes.indexOf(startNode);
-    const ei = nodes.indexOf(endNode);
-    return nodes.slice(si, ei + 1);
+  public static nextValidTextNode(node: Node, including?: boolean): Text {
+    node = including ? node : this.nextNode(node);
+    while (node) {
+      const valid = this.firstValidTextNode(node);
+      if (valid) {
+        return valid;
+      }
+      node = this.nextNode(node);
+    }
+    throw new Error('No Valid Text Node');
   }
 
-  public static getValidTextNode(node: Node): XText | null {
-    if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
-      return node as XText;
-    } else if (node.nodeType === 1 && !NodeUtils.isSkippable(node as Element)) {
-      for (let i = 0, len = node.childNodes.length; i < len; ++i) {
-        const valid = NodeUtils.getValidTextNode(node.childNodes[i]);
+  public static prevValidTextNode(node: Node, including?: boolean): Text {
+    node = including ? node : this.prevNode(node);
+    while (node) {
+      const valid = this.lastValidTextNode(node);
+      if (valid) {
+        return valid;
+      }
+      node = this.prevNode(node);
+    }
+    throw new Error('No Valid Text Node');
+  }
+
+  private static nextNode(node: Node): Node {
+    let next = node.nextSibling as Node;
+    while (!next) {
+      node = node.parentNode as Node;
+      next = node!.nextSibling as Node;
+    }
+    return next;
+  }
+
+  private static prevNode(node: Node): Node {
+    let prev = node.previousSibling as Node;
+    while (!prev) {
+      node = node.parentNode as Node;
+      prev = node!.previousSibling as Node;
+    }
+    return prev;
+  }
+
+  public static firstValidTextNode(node: Node): Text | null {
+    if (this.isValidTextNode(node)) {
+      return node as Text;
+    } else if (node.nodeType === 1 && !this.isSkippable(node as Element)) {
+      const ordered = Array.from(node.childNodes);
+      for (let childNode of ordered) {
+        const valid = this.firstValidTextNode(childNode);
         if (valid) {
           return valid;
         }
       }
     }
-    return NodeUtils.getValidTextNode(node.nextSibling!);
+    return null;
+  }
+
+  public static lastValidTextNode(node: Node): Text | null {
+    if (this.isValidTextNode(node)) {
+      return node as Text;
+    } else if (node.nodeType === 1 && !this.isSkippable(node as Element)) {
+      const reversed = Array.from(node.childNodes).reverse();
+      for (let childNode of reversed) {
+        const valid = this.lastValidTextNode(childNode);
+        if (valid) {
+          return valid;
+        }
+      }
+    }
+    return null;
+  }
+
+  private static isValidTextNode(node: Node) {
+    return node.nodeType === 3 && (node as Text).length > 0 && /\S/.test((node as Text).data);
+  }
+
+  public static getTextNodesBetween(startNode: Text, endNode: Text): Array<Text> {
+    const result = [];
+    let node = startNode;
+    result.push(node);
+    while (node !== endNode) {
+      node = this.nextValidTextNode(node);
+      result.push(node);
+    }
+    return result;
   }
 
   public static getValidTextNodes(node: Node): Text[] {
-    if (node.nodeType === 3 && /\S/.test((node as Text).data)) {
+    if (this.isValidTextNode(node)) {
       return [node as Text];
-    } else if (node.nodeType === 1 && !NodeUtils.isSkippable(node as Element)) {
+    } else if (node.nodeType === 1 && !this.isSkippable(node as Element)) {
       return Array.from(node.childNodes).reduce((nodes: Text[], child: Node) => {
-        return nodes.concat(NodeUtils.getValidTextNodes(child));
+        return nodes.concat(this.getValidTextNodes(child));
       }, []);
     }
     return [];
   }
 
   private static isSkippable(node: Element): boolean {
-    return NodeUtils.elementsToSkip.test(node, null);
+    return this.elementsToSkip.test(node, null);
   }
 
   public static split(text: XText, offset: number): XText {

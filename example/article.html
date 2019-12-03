@@ -37,46 +37,48 @@
     <p>周作人，一九二三年七月三十日</p>
   </div>
 </div>
-<!--<script type="text/javascript" src="../dist/texton.umd.js"></script>-->
+<script type="text/javascript" src="../dist/texton.umd.js"></script>
 <style type="text/css">
   em.markup {
     background-color: yellowgreen;
     font-style: normal;
   }
 </style>
-<!--<script type="application/javascript">-->
-<!--  function renderSelection(selection) {-->
-<!--    if (selection && selection.getOccurrence().nth >= 0) {-->
-<!--      selection.texts.forEach((text) => {-->
-<!--        const $mark = document.createElement('em');-->
-<!--        $mark.classList.add('markup');-->
-<!--        text.replaceWith($mark);-->
-<!--        $mark.appendChild(text);-->
-<!--      });-->
-<!--    }-->
-<!--  }-->
+<script type="application/javascript">
+  function renderSelection(selection) {
+    if (selection && selection.getOccurrence().nth >= 0) {
+      selection.getTextNodes().forEach((text) => {
+        const $mark = document.createElement('em');
+        $mark.classList.add('markup');
+        text.replaceWith($mark);
+        $mark.appendChild(text);
+      });
+    }
+  }
 
-<!--  const {XDocument, XSelection} = texton;-->
+  const {XDocument, XSelection} = texton;
 
-<!--  const doc = XDocument.from(document.body);-->
+  const doc = XDocument.from(document.body);
 
-<!--  // const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};-->
-<!--  // const range1 = doc.fromTextRange(textRange1);-->
-<!--  // renderSelection(range1);-->
-<!--  // const textRange2 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 2}};-->
-<!--  // const range2 = doc.fromTextRange(textRange2);-->
-<!--  // renderSelection(range2);-->
-<!--  // const text1 = doc.fromText('太残酷了', 1);-->
-<!--  // renderSelection(text1);-->
-<!--  // const text2 = doc.fromText('太残酷了', 2);-->
-<!--  // renderSelection(text2);-->
+  const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};
+  const range1 = doc.fromTextRange(textRange1);
+  renderSelection(range1);
+  // const textRange2 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 2}};
+  // const range2 = doc.fromTextRange(textRange2);
+  // renderSelection(range2);
+  // const text1 = doc.fromText('太残酷了', 1);
+  // renderSelection(text1);
+  // const text2 = doc.fromText('太残酷了', 2);
+  // renderSelection(text2);
 
-<!--  doc.root.addEventListener('mouseup', () => {-->
-<!--    const selection = doc.fromSelection(window.getSelection());-->
-<!--    console.log(selection.getTextNodes());-->
-<!--    console.log(selection.getTextRange(5));-->
-<!--    console.log(selection.getOccurrence());-->
-<!--  });-->
-<!--</script>-->
+  doc.root.addEventListener('mouseup', () => {
+    const selection = doc.fromSelection(window.getSelection());
+    if (selection && !selection.isEmpty()) {
+      console.log(selection.getTextNodes());
+      console.log(selection.getTextRange(5));
+      console.log(selection.getOccurrence());
+    }
+  });
+</script>
 </body>
 </html>

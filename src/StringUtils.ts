@@ -32,6 +32,19 @@ export class StringUtils {
     return -1;
   }
 
+  public static indexOfNthNotEmptyCharFromEnd(source: string, nth: number): number {
+    let i = source.length - 1;
+    for (let n = -1; n <= nth && i > -1; i--) {
+      if (!/\s+/m.test(source[i])) {
+        n++;
+        if (n === nth) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
   /**
    * the occurrences(include the positions) of searchString
    * @param {string} source

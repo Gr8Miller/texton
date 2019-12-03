@@ -1,7 +1,7 @@
 import {StringUtils} from './StringUtils';
 import {XDocument} from './XDocument';
-import {NodeUtils} from './NodeUtils';
 import {IOccurrence, ITextRange} from './texton';
+import RangeUtils from './RangeUtils';
 
 export interface XText extends Text {
   startPosition: number;
@@ -68,6 +68,7 @@ export class XSelection {
    */
   public static fromRange(range: Range | null, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     if (range) {
+      range = RangeUtils.trim(range);
       if (optSelect) {
         const selection: Selection | null = xDoc.win.getSelection();
         if (selection) {
@@ -146,36 +147,7 @@ export class XSelection {
     if (this.texts) {
       return this.texts;
     }
-
-    let sContainer: Text = this.range.startContainer as Text;
-    let eContainer: Text = this.range.endContainer as Text;
-    let sOffset = this.range.startOffset;
-    let eOffset = this.range.endOffset;
-    if (sContainer.nodeType !== 3) {
-      sContainer = NodeUtils.getValidTextNode(sContainer)!;
-    }
-    if (eContainer.nodeType !== 3) {
-      eContainer = NodeUtils.getValidTextNode(eContainer)!;
-    }
-
-    if (sOffset !== 0) {
-      const srp = sContainer.splitText(sOffset);
-      if (eContainer === sContainer) {
-        eContainer = srp;
-        eOffset = eOffset - sOffset;
-      }
-      sContainer = srp;
-      sOffset = 0;
-    }
-
-    if (eContainer.data.length !== eOffset) {
-      eContainer.splitText(eOffset);
-    }
-
-    const root = this.range.commonAncestorContainer;
-    this.texts = NodeUtils.getTextNodesBetween(root, sContainer, eContainer);
-    this.range.setStart(sContainer, sOffset);
-    this.range.setEnd(eContainer, eOffset);
+    this.texts = RangeUtils.getTextNodes(this.range);
     return this.texts;
   }
 
@@ -241,12 +213,12 @@ export class XSelection {
 
     temp.setEnd(this.range.endContainer, this.range.endOffset);
     const eContent: string = StringUtils.compact(temp.toString());
-    const eText = eContent.length > 5 ? eContent.substr(eContent.length - 5, 5) : eContent;
+    const eText = eContent.length > len ? eContent.substr(eContent.length - len, len) : eContent;
     const eOccurs: IOccurrence[] = StringUtils.find(eContent, eText);
 
     temp.setEnd(this.range.startContainer, this.range.startOffset);
     const sContent: string = StringUtils.compact(temp.toString());
-    const sText = sContent.length > 5 ? sContent.substr(sContent.length - 5, 5) : sContent;
+    const sText = sContent.length > len ? sContent.substr(sContent.length - len, len) : sContent;
     const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
 
     // const sContainer = this.range.startContainer as Text;

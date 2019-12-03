@@ -29,10 +29,10 @@ haha
     if (selection && selection.getOccurrence().nth >= 0) {
       console.log(selection.getTextRange(5));
       console.log("=========================");
-      console.log(selection.texts);
+      console.log(selection.getTextNodes());
       console.log(selection.getContent());
       console.log(selection.getOccurrence());
-      selection.texts.forEach((text) => {
+      selection.getTextNodes().forEach((text) => {
         const $mark = document.createElement('em');
         $mark.classList.add('markup');
         text.replaceWith($mark);
