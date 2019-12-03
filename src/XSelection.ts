@@ -136,6 +136,15 @@ export class XSelection {
     return null;
   }
 
+  public trim() {
+    RangeUtils.trim(this.range);
+    const selection: Selection | null = this.xdoc.win.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(this.range);
+    }
+  }
+
   /**
    * the text nodes contained in the selection.
    * <em>

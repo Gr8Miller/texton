@@ -1,5 +1,6 @@
 export {XText, XSelection} from './XSelection';
 export {XDocument} from './XDocument';
+export {NodeUtils} from './NodeUtils';
 
 export interface IOccurrence {
   nth: number;

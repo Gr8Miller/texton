@@ -1,6 +1,3 @@
-import {XText} from './XSelection';
-import {StringUtils} from './StringUtils';
-
 export class NodeUtils {
 
   private static readonly elementsToSkip = {
@@ -116,7 +113,7 @@ export class NodeUtils {
     return null;
   }
 
-  private static isValidTextNode(node: Node) {
+  public static isValidTextNode(node: Node) {
     return node.nodeType === 3 && (node as Text).length > 0 && /\S/.test((node as Text).data);
   }
 
@@ -144,13 +141,5 @@ export class NodeUtils {
 
   private static isSkippable(node: Element): boolean {
     return this.elementsToSkip.test(node, null);
-  }
-
-  public static split(text: XText, offset: number): XText {
-    const rp: XText = text.splitText(offset) as XText;
-    rp.startPosition = text.startPosition + StringUtils.compact(text.data).length;
-    rp.endPosition = text.endPosition;
-    text.endPosition = rp.startPosition - 1;
-    return rp;
   }
 }
