@@ -26,12 +26,12 @@ haha
   const doc = XDocument.from(document.querySelector('#body'));
 
   function renderSelection(selection) {
-    if (selection && selection.getOccurrence().nth >= 0) {
+    if (selection && selection.getText().nth >= 0) {
       console.log(selection.getTextRange(5));
       console.log("=========================");
       console.log(selection.getTextNodes());
       console.log(selection.getContent());
-      console.log(selection.getOccurrence());
+      console.log(selection.getText());
       selection.getTextNodes().forEach((text) => {
         const $mark = document.createElement('em');
         $mark.classList.add('markup');

@@ -190,7 +190,7 @@ refer `example/article.html`
     const selection = doc.fromSelection(window.getSelection());
     console.log({
       text: selection.getContent(true),
-      nth: selection.getOccurrence().nth,
+      nth: selection.getText().nth,
     });
   });
 ```

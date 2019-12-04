@@ -2,21 +2,23 @@ export {XText, XSelection} from './XSelection';
 export {XDocument} from './XDocument';
 export {NodeUtils} from './NodeUtils';
 
-export interface IOccurrence {
+export interface IText {
   nth: number;
-  position: number;
+  text: string;
+  position?: number
 }
 
-export namespace IOccurrence {
-  export const None: IOccurrence = {
+export namespace IText {
+  export const None: IText = {
     nth: -1,
     position: -1,
+    text: '',
   };
 }
 
 export interface ITextRange {
-  from: { text: string, nth: number },
-  to: { text: string, nth: number },
+  from: IText,
+  to: IText,
 }
 
 export namespace ITextRange {

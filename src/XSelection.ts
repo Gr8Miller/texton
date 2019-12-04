@@ -1,6 +1,6 @@
 import {StringUtils} from './StringUtils';
 import {XDocument} from './XDocument';
-import {IOccurrence, ITextRange} from './texton';
+import {IText, ITextRange, NodeUtils} from './texton';
 import RangeUtils from './RangeUtils';
 
 export interface XText extends Text {
@@ -169,21 +169,18 @@ export class XSelection {
    * </em>
    *
    */
-  public getOccurrence(): IOccurrence {
+  public getText(): IText {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
-      return IOccurrence.None;
+      return IText.None;
     }
 
-    const temp: Range = this.xdoc.doc.createRange();
-    temp.setStart(this.xdoc.root, 0);
-    temp.setEnd(this.range.endContainer, this.range.endOffset);
-    const content: string = StringUtils.compact(temp.toString());
-    const occurrences: IOccurrence[] = StringUtils.find(content, cText);
-    if (occurrences && occurrences.length > 0) {
-      return occurrences[occurrences.length - 1];
+    const content: string = NodeUtils.getContentTo(this.range.endContainer as Text, this.range.endOffset, this.xdoc);
+    const texts: IText[] = StringUtils.find(content, cText);
+    if (texts && texts.length > 0) {
+      return texts[texts.length - 1];
     }
-    return IOccurrence.None;
+    return IText.None;
   }
 
   /**
@@ -217,35 +214,18 @@ export class XSelection {
       return ITextRange.None;
     }
 
-    const temp: Range = this.xdoc.doc.createRange();
-    temp.setStart(this.xdoc.root, 0);
-
-    temp.setEnd(this.range.endContainer, this.range.endOffset);
-    const eContent: string = StringUtils.compact(temp.toString());
+    const eContent: string = NodeUtils.getContentTo(this.range.endContainer as Text, this.range.endOffset, this.xdoc);
     const eText = eContent.length > len ? eContent.substr(eContent.length - len, len) : eContent;
-    const eOccurs: IOccurrence[] = StringUtils.find(eContent, eText);
+    const eTexts: IText[] = StringUtils.find(eContent, eText);
 
-    temp.setEnd(this.range.startContainer, this.range.startOffset);
-    const sContent: string = StringUtils.compact(temp.toString());
+    const sContent: string = NodeUtils.getContentTo(this.range.startContainer as Text, this.range.startOffset, this.xdoc);
     const sText = sContent.length > len ? sContent.substr(sContent.length - len, len) : sContent;
-    const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
+    const sTexts: IText[] = StringUtils.find(sContent, sText);
 
-    // const sContainer = this.range.startContainer as Text;
-    // if (sContainer.nodeType !== 3) {
-    //   sContainer = NodeUtils.getValidTextNode(sContainer)!;
-    // }
-    // const sText = cText.length > 5 ? cText.substr(0, 5) : cText;
-    // const cHead: string = StringUtils.compact(sContainer.substringData(0, this.range.startOffset));
-    // const cLength = cHead.length + sText.length;
-    // const sOffset = StringUtils.indexOfNthNotEmptyChar(this.range.toString(), cLength);
-    // temp.setEnd(sContainer, sOffset);
-    // const sContent: string = StringUtils.compact(temp.toString());
-    // const sOccurs: IOccurrence[] = StringUtils.find(sContent, sText);
-
-    if (sOccurs && sOccurs.length > 0 && eOccurs && eOccurs.length > 0) {
+    if (sTexts && sTexts.length > 0 && eTexts && eTexts.length > 0) {
       return {
-        from: {text: sText, nth: sOccurs[sOccurs.length - 1].nth},
-        to: {text: eText, nth: eOccurs[eOccurs.length - 1].nth}
+        from: {text: sText, nth: sTexts[sTexts.length - 1].nth},
+        to: {text: eText, nth: eTexts[eTexts.length - 1].nth}
       }
     }
     return ITextRange.None;

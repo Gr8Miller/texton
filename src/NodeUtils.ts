@@ -1,3 +1,6 @@
+import {XDocument} from './texton';
+import {StringUtils} from './StringUtils';
+
 export class NodeUtils {
 
   private static readonly elementsToSkip = {
@@ -137,6 +140,13 @@ export class NodeUtils {
       }, []);
     }
     return [];
+  }
+
+  public static getContentTo(end: Text, endOffset: number, xdoc: XDocument) {
+    const temp: Range = xdoc.doc.createRange();
+    temp.setStart(xdoc.root, 0);
+    temp.setEnd(end, endOffset);
+    return StringUtils.compact(temp.toString());
   }
 
   private static isSkippable(node: Element): boolean {

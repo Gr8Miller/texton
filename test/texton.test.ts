@@ -14,7 +14,7 @@ describe('XDocument', () => {
     document.body.innerHTML += `
       haha
       <div id='body'>
-        this is a test                
+        this is a test
         <span>this is a test</span>
         this is a test<br>
         this is a test
@@ -45,7 +45,7 @@ describe('XDocument', () => {
     expect(doc.nodes).toBe(6);
     expect(doc.text).toEqual('thisisatestthisisatestthisisatestthisisatestthisisatestthisisatest');
     for (const node of doc.nodes) {
-      expect(StringUtils.trim(node.data)).toEqual('this is a test');
+      expect(node.data.trim()).toEqual('this is a test');
     }
   });
 
@@ -57,8 +57,8 @@ describe('XDocument', () => {
   test('XDocument.select("test this is", 1)', () => {
     const selection: XSelection | null = doc.select('test this i', 1);
     expect(selection).not.toBeNull();
-    expect(StringUtils.compact(selection!.getContent())).toBe('testthisis');
-    const occurrence = selection!.getOccurrence();
+    expect(selection!.getContent(true)).toBe('testthisis');
+    const occurrence = selection!.getText();
     expect(occurrence.nth).toBe(1);
     let nodes = selection!.getTextNodes();
     expect(nodes.length).toBe(2);

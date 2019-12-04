@@ -1,4 +1,4 @@
-import {IOccurrence} from './texton';
+import {IText} from './texton';
 
 export class StringUtils {
 
@@ -49,21 +49,22 @@ export class StringUtils {
    * the occurrences(include the positions) of searchString
    * @param {string} source
    * @param {string} searchString
-   * @returns {Array<IOccurrence>}
+   * @returns {Array<IText>}
    */
-  public static find(source: string, searchString: string): IOccurrence[] {
+  public static find(source: string, searchString: string): IText[] {
     let times = 0;
     let position = -2;
-    const result: IOccurrence[] = [];
+    const result: IText[] = [];
     if (searchString.length < 1) {
       return result;
     }
+    const text = StringUtils.compact(source);
     while (position !== -1) {
       position = source.indexOf(searchString, position + 1);
       if (position < 0) {
         break;
       }
-      result.push({nth: ++times, position});
+      result.push({nth: ++times, text, position});
     }
     return result;
   }
@@ -73,12 +74,5 @@ export class StringUtils {
    */
   public static compact(source: string): string {
     return source.replace(/\s+/gm, '');
-  }
-
-  /**
-   * @return {string} trimmed string
-   */
-  public static trim(source: string): string {
-    return source.replace(/(^\s*)|(\s*$)/g, '');
   }
 }
