@@ -26,12 +26,12 @@ haha
   const doc = XDocument.from(document.querySelector('#body'));
 
   function renderSelection(selection) {
-    if (selection && selection.getText().nth >= 0) {
-      console.log(selection.getTextRange(5));
+    if (selection && selection.serializeToIndex().nth >= 0) {
+      console.log(selection.serializeToRange(5));
       console.log("=========================");
       console.log(selection.getTextNodes());
       console.log(selection.getContent());
-      console.log(selection.getText());
+      console.log(selection.serializeToIndex());
       selection.getTextNodes().forEach((text) => {
         const $mark = document.createElement('em');
         $mark.classList.add('markup');
@@ -44,8 +44,8 @@ haha
 
   console.log(doc.nodes);
   const range = {
-    from: {text: "hisis", nth: 2},
-    to: {text: "estth", nth: 2}
+    start: {text: "hisis", nth: 2},
+    end: {text: "estth", nth: 2}
   };
   const selection1 = XSelection.fromTextRange(range, false, doc);
   renderSelection(selection1);

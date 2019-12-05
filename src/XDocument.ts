@@ -1,7 +1,7 @@
 import {XSelection, XText} from './XSelection';
 import {StringUtils} from './StringUtils';
 import {NodeUtils} from './NodeUtils';
-import {ITextRange} from './texton';
+import {ITextIndex, ITextRange} from './texton';
 
 export class XDocument {
   public static from(root: Element = document.body): XDocument {
@@ -45,7 +45,7 @@ export class XDocument {
       if (this.selection && !this.selection.isEmpty()) {
         this.selection.empty();
       }
-      this.selection = this.fromText(optText.trim(), optNth);
+      this.selection = this.fromText(optText.trim(), optNth, optSelect);
     } else {
       let selection = this.win.getSelection()!;
       if (selection) {
@@ -66,7 +66,14 @@ export class XDocument {
    * @see {@code XSelection.fromText}
    */
   public fromText(text: string, nth: number = 1, optSelect: boolean = false): XSelection | null {
-    return this.selection = XSelection.fromText(text, nth, optSelect, this);
+    return this.selection = this.fromTextIndex({text, nth}, optSelect);
+  }
+
+  /**
+   * @see {@code XSelection.fromText}
+   */
+  public fromTextIndex(index: ITextIndex, optSelect: boolean = false): XSelection | null {
+    return this.selection = XSelection.fromText(index, optSelect, this);
   }
 
   /**

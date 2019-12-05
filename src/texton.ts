@@ -2,14 +2,14 @@ export {XText, XSelection} from './XSelection';
 export {XDocument} from './XDocument';
 export {NodeUtils} from './NodeUtils';
 
-export interface IText {
+export interface ITextIndex {
   nth: number;
   text: string;
   position?: number
 }
 
-export namespace IText {
-  export const None: IText = {
+export namespace ITextIndex {
+  export const None: ITextIndex = {
     nth: -1,
     position: -1,
     text: '',
@@ -17,18 +17,18 @@ export namespace IText {
 }
 
 export interface ITextRange {
-  from: IText,
-  to: IText,
+  start: ITextIndex,
+  end: ITextIndex,
 }
 
 export namespace ITextRange {
   export const None: ITextRange = {
-    from: {text: '', nth: -1},
-    to: {text: '', nth: -1},
+    start: {text: '', nth: -1},
+    end: {text: '', nth: -1},
   };
 
   export function toSimpleString(range: ITextRange): string {
-    return JSON.stringify([`${range.from.nth}:${range.from.text}`, `${range.to.nth}:${range.to.text}`]);
+    return JSON.stringify([`${range.start.nth}:${range.start.text}`, `${range.end.nth}:${range.end.text}`]);
   }
 
   export function fromSimpleString(str: string): ITextRange {
@@ -36,8 +36,8 @@ export namespace ITextRange {
     const from = simple[0].split(':', 2);
     const to = simple[1].split(':');
     return {
-      from: {text: from[1], nth: parseInt(from[0], 10)},
-      to: {text: to[1], nth: parseInt(to[0], 10)}
+      start: {text: from[1], nth: parseInt(from[0], 10)},
+      end: {text: to[1], nth: parseInt(to[0], 10)}
     }
   }
 }

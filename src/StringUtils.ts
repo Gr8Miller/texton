@@ -1,4 +1,4 @@
-import {IText} from './texton';
+import {ITextIndex} from './texton';
 
 export class StringUtils {
 
@@ -49,16 +49,16 @@ export class StringUtils {
    * the occurrences(include the positions) of searchString
    * @param {string} source
    * @param {string} searchString
-   * @returns {Array<IText>}
+   * @returns {Array<ITextIndex>}
    */
-  public static find(source: string, searchString: string): IText[] {
+  public static find(source: string, searchString: string): ITextIndex[] {
     let times = 0;
     let position = -2;
-    const result: IText[] = [];
+    const result: ITextIndex[] = [];
     if (searchString.length < 1) {
       return result;
     }
-    const text = StringUtils.compact(source);
+    const text = StringUtils.compact(searchString);
     while (position !== -1) {
       position = source.indexOf(searchString, position + 1);
       if (position < 0) {

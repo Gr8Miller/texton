@@ -46,7 +46,7 @@
 </style>
 <script type="application/javascript">
   function renderSelection(selection) {
-    if (selection && selection.getOccurrence().nth >= 0) {
+    if (selection && selection.serializeToIndex().nth >= 0) {
       selection.getTextNodes().forEach((text) => {
         const $mark = document.createElement('em');
         $mark.classList.add('markup');
@@ -60,7 +60,7 @@
 
   const doc = XDocument.from(document.body);
 
-  const textRange1 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 1}};
+  const textRange1 = {start: {text: "我日日走着", nth: 1}, end: {text: "不", nth: 1}};
   const range1 = doc.fromTextRange(textRange1);
   renderSelection(range1);
   // const textRange2 = {from: {text: "我日日走着", nth: 1}, to: {text: "不", nth: 2}};
@@ -75,8 +75,8 @@
     const selection = doc.fromSelection(window.getSelection());
     if (selection && !selection.isEmpty()) {
       console.log(selection.getTextNodes());
-      console.log(selection.getTextRange(5));
-      console.log(selection.getText());
+      console.log(selection.serializeToRange(5));
+      console.log(selection.serializeToIndex());
     }
   });
 </script>

@@ -1,6 +1,6 @@
 import {StringUtils} from './StringUtils';
 import {XDocument} from './XDocument';
-import {IText, ITextRange, NodeUtils} from './texton';
+import {ITextIndex, ITextRange, NodeUtils} from './texton';
 import RangeUtils from './RangeUtils';
 
 export interface XText extends Text {
@@ -49,14 +49,13 @@ export class XSelection {
 
   /**
    * create {@link XSelection} from {@link ITextRange} pojo
-   * @param text the text content to be selected.
-   * @param nth together with {@param text} specifies the exact {@code nth} {@code text} will be used to create the selection.
+   * @param index the (nth) text to be selected.
    * @param optSelect true to create explicit selection(be selected visibly from browser), false otherwise
    * @param xDoc the context of the to be created `XSelection` instance.
    */
-  public static fromText(text: string, nth: number = 1, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
+  public static fromText(index: ITextIndex, optSelect: boolean = false, xDoc: XDocument): XSelection | null {
     xDoc.refresh();
-    const range: Range | null = XSelection.rangeFromText(text, nth, xDoc);
+    const range: Range | null = XSelection.rangeFromText(index, xDoc);
     return XSelection.fromRange(range, optSelect, xDoc);
   }
 
@@ -89,8 +88,8 @@ export class XSelection {
   }
 
   private static rangeFromTextRange(textRange: ITextRange, xDoc: XDocument): Range | null {
-    const head = XSelection.rangeFromText(textRange.from.text, textRange.from.nth, xDoc);
-    const tail = XSelection.rangeFromText(textRange.to.text, textRange.to.nth, xDoc);
+    const head = XSelection.rangeFromText(textRange.start, xDoc);
+    const tail = XSelection.rangeFromText(textRange.end, xDoc);
     if (head && tail) {
       const range: Range = xDoc.doc.createRange();
       range.setStart(head.endContainer, head.endOffset);
@@ -105,18 +104,18 @@ export class XSelection {
    *  the beginning of the document when no parameters are given, else return an range
    *  object that contains the nth occurrence of the specified text
    *
-   * @param {string} text the base text
-   * @param {number} nth = 1 the nth index
+   * @param {ITextIndex} index
    * @param {XDocument} xDoc
    * @return {Range} the range created that contains the specified text
    * @private
    */
-  private static rangeFromText(text: string, nth: number = 1, xDoc: XDocument): Range | null {
+  private static rangeFromText(index: ITextIndex, xDoc: XDocument): Range | null {
+    const {text, nth} = index;
     const nodes: XText[] = xDoc.nodes;
     const cText: string = StringUtils.compact(text);
-    const index: number = StringUtils.indexOf(xDoc.text, cText, nth || 1);
-    if (index > -1) {
-      const sPos: number = index + nodes[0].startPosition; // include the first character
+    const i: number = StringUtils.indexOf(xDoc.text, cText, nth || 1);
+    if (i > -1) {
+      const sPos: number = i + nodes[0].startPosition; // include the first character
       const ePos: number = sPos + cText.length; // exclude the last character
 
       const sIndex = nodes.findIndex((node: XText) => node.endPosition >= sPos);
@@ -137,11 +136,10 @@ export class XSelection {
   }
 
   public trim() {
-    RangeUtils.trim(this.range);
     const selection: Selection | null = this.xdoc.win.getSelection();
     if (selection) {
       selection.removeAllRanges();
-      selection.addRange(this.range);
+      selection.addRange(RangeUtils.trim(this.range));
     }
   }
 
@@ -156,7 +154,14 @@ export class XSelection {
     if (this.texts) {
       return this.texts;
     }
-    this.texts = RangeUtils.getTextNodes(this.range);
+
+    this.texts = RangeUtils.extractTextNodes(this.range);
+    const selection: Selection | null = this.xdoc.win.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      selection.collapseToStart();
+      selection.empty && selection.empty();
+      selection.removeAllRanges && selection.removeAllRanges();
+    }
     return this.texts;
   }
 
@@ -167,20 +172,19 @@ export class XSelection {
    *   {@code occurrence.nth} time. and the start char of this selection is the
    *   {@code occurrence.position}th char of the whole text content in this page.
    * </em>
-   *
    */
-  public getText(): IText {
+  public serializeToIndex(): ITextIndex {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
-      return IText.None;
+      return ITextIndex.None;
     }
 
     const content: string = NodeUtils.getContentTo(this.range.endContainer as Text, this.range.endOffset, this.xdoc);
-    const texts: IText[] = StringUtils.find(content, cText);
+    const texts: ITextIndex[] = StringUtils.find(content, cText);
     if (texts && texts.length > 0) {
       return texts[texts.length - 1];
     }
-    return IText.None;
+    return ITextIndex.None;
   }
 
   /**
@@ -208,7 +212,7 @@ export class XSelection {
    *
    * @param len
    */
-  public getTextRange(len: number = 5): ITextRange {
+  public serializeToRange(len: number = 5): ITextRange {
     const cText: string = StringUtils.compact(this.range.toString());
     if (cText.length < 1) {
       return ITextRange.None;
@@ -216,16 +220,16 @@ export class XSelection {
 
     const eContent: string = NodeUtils.getContentTo(this.range.endContainer as Text, this.range.endOffset, this.xdoc);
     const eText = eContent.length > len ? eContent.substr(eContent.length - len, len) : eContent;
-    const eTexts: IText[] = StringUtils.find(eContent, eText);
+    const eTexts: ITextIndex[] = StringUtils.find(eContent, eText);
 
     const sContent: string = NodeUtils.getContentTo(this.range.startContainer as Text, this.range.startOffset, this.xdoc);
     const sText = sContent.length > len ? sContent.substr(sContent.length - len, len) : sContent;
-    const sTexts: IText[] = StringUtils.find(sContent, sText);
+    const sTexts: ITextIndex[] = StringUtils.find(sContent, sText);
 
     if (sTexts && sTexts.length > 0 && eTexts && eTexts.length > 0) {
       return {
-        from: {text: sText, nth: sTexts[sTexts.length - 1].nth},
-        to: {text: eText, nth: eTexts[eTexts.length - 1].nth}
+        start: sTexts[sTexts.length - 1],
+        end: eTexts[eTexts.length - 1]
       }
     }
     return ITextRange.None;
@@ -245,7 +249,7 @@ export class XSelection {
   /**
    * get the native selection
    */
-  public get selection(): Selection {
+  public toSelection(): Selection {
     const selection: Selection = this.xdoc.win.getSelection()!;
     if (selection.rangeCount < 1) {
       selection.addRange(this.range);
@@ -281,7 +285,7 @@ export class XSelection {
    * check if the selection is cleared or not.
    */
   public isEmpty(): boolean {
-    const selection: Selection = this.selection;
-    return selection.rangeCount < 1 || selection.isCollapsed || this.range.collapsed;
+    const selection: Selection | null = this.xdoc.win.getSelection();
+    return !selection || selection.rangeCount < 1 || selection.isCollapsed || this.range.collapsed;
   }
 }

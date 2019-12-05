@@ -143,10 +143,11 @@ export class NodeUtils {
   }
 
   public static getContentTo(end: Text, endOffset: number, xdoc: XDocument) {
-    const temp: Range = xdoc.doc.createRange();
-    temp.setStart(xdoc.root, 0);
-    temp.setEnd(end, endOffset);
-    return StringUtils.compact(temp.toString());
+    const first = this.firstValidTextNode(xdoc.root)!;
+    const nodes = this.getTextNodesBetween(first, end);
+    const tail = end.substringData(0, endOffset);
+    const content = nodes.slice(0, nodes.length - 1).map((n: Text) => n.data.trim()).join('') + tail;
+    return StringUtils.compact(content);
   }
 
   private static isSkippable(node: Element): boolean {

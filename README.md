@@ -181,7 +181,7 @@ refer `example/article.html`
 ```javascript
   doc.root.addEventListener('mouseup', () => {
     const selection = doc.fromSelection(window.getSelection());
-    console.log(selection.getTextRange(5));
+    console.log(selection.serializeToRange(5));
   });
 ```
 ![selection1](./example/screenshots/selection1.png)

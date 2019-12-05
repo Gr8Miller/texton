@@ -44,7 +44,7 @@ export default class RangeUtils {
     return range;
   }
 
-  public static getTextNodes(range: Range): Array<Text> {
+  public static extractTextNodes(range: Range): Array<Text> {
     let sContainer: Text = range.startContainer as Text;
     let eContainer: Text = range.endContainer as Text;
     let sOffset = range.startOffset;
